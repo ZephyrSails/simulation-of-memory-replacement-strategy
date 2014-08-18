@@ -1,56 +1,120 @@
+import java.util.ArrayList;
+//import job;
+
+
 public class SPS {
-	static int jobNum = 7;
 	static int spaceNum = 64;
-	static boolean memory[] = new boolean[spaceNum];
-	static boolean job[][] = new boolean[jobNum][spaceNum];
-	static boolean meanNoting;
+	static ArrayList<job> MEMORY = new ArrayList<job>();
+	static boolean state = false;// false for first fit, true for best fit
 	public static void main(String args[]){
 		System.out.println("SPS_start, printing 64 block for simulation");
 		System.out.println("0.........1.........2.........3.........4.........5........6....");
-		sertJob(1, 0, 12);
-		sertJob(3, 16, 18);
-		printMemory();
+		MEMORY.add(new job('0', 64));
+		addJob('a', 16);
+		addJob('b', 16);
+		addJob('c', 16);
+		addJob('d', 16);
+		releaseJob('d');
+		printJob();
+		releaseJob('b');
+		printJob();
+		releaseJob('c');
+		printJob();
 	}
-
-	public static void sertJob(int jobs, int begin, int end) {
-		for (int i = begin; i <= end; i++) {
-			job[jobs][i] = true;
-			memory[i] = true;
+	
+	public static void printJob() {
+		for (int i = 0; i < MEMORY.size(); i++) {
+			if (MEMORY.get(i).name == '0') {
+				for (int j = 0; j < MEMORY.get(i).length; j++)
+					System.out.print('#');
+			}
+			else {
+				for (int j = 0; j < MEMORY.get(i).length; j++)
+					System.out.print('!');
+			}
 		}
+		System.out.println();
 	}
 
-	public static void printMemory() {
-		for (int i = 0; i < jobNum; i++) {
-			int begin = 0, end = 0;
-			boolean inJob = false;
-			for (int j = 0; j < spaceNum; j++) {
-				if (!job[i][j] && !inJob) {
-					System.out.print(" ");
-				}
-				else if (job[i][j] && !inJob) {
-					System.out.print("[");
-					begin = j;
-					inJob = true;
-				}
-				else if (job[i][j] && inJob) {
-					// do nothing
-				}
-				else if (!job[i][j] && inJob) {
-					end = j;
-					int length = end - begin;
-					int jobPlace = length / 2;
-					for (int k = begin+1; k < begin + jobPlace; k++) {
-						System.out.print("_");
-					}
-					System.out.print(i);
-					for (int k = begin + jobPlace + 1; k < end-1; k++) {
-						System.out.print("_");
-					}
-					System.out.print("]");
-					inJob = false;
+	public static void addJob(char name, int length) {
+		if (!state) {
+			for (int i = 0; i < MEMORY.size(); i++) {
+				if (MEMORY.get(i).name == '0' && MEMORY.get(i).length > length) {
+					int blank = MEMORY.get(i).length;
+					MEMORY.remove(i);
+					if (blank != length)
+						MEMORY.add(i, new job('0', blank - length));
+					MEMORY.add(i, new job(name, length));
+					break;
 				}
 			}
-			System.out.println();
 		}
 	}
+
+	public static void releaseJob(char name) {
+		if (!state) {
+			for (int i = 0; i < MEMORY.size(); i++) {
+				if (MEMORY.get(i).name == name) {
+					if (i == 0) {	// in head
+						if (MEMORY.get(i+1).name == '0') {	// back blank
+							int blank = MEMORY.get(i+1).length;
+							int free = MEMORY.get(i).length;
+							MEMORY.remove(i);
+							MEMORY.remove(i);
+							MEMORY.add(i, new job('0', blank + free));
+							break;
+						}
+						else {	// no blank
+							MEMORY.get(i).name = '0'; break;
+						}
+					}
+					else if (i == MEMORY.size()) {	// in tail
+						if (MEMORY.get(i-1).name == '0') {	// front blank
+							int blank = MEMORY.get(i-1).length;
+							int free = MEMORY.get(i).length;
+							MEMORY.remove(i-1);
+							MEMORY.remove(i-1);
+							MEMORY.add(i-1, new job('0', blank + free));
+							break;
+						}
+						else {	// no blank
+							MEMORY.get(i).name = '0'; break;
+						}
+					}
+					else {	// in middle
+						if (MEMORY.get(i-1).name == '0' && MEMORY.get(i+1).name == '0') {	// both blank
+							int fblank = MEMORY.get(i-1).length;
+							int bblank = MEMORY.get(i+1).length;
+							int free = MEMORY.get(i).length;
+							MEMORY.remove(i-1);
+							MEMORY.remove(i-1);
+							MEMORY.remove(i-1);
+							MEMORY.add(i-1, new job('0', fblank + bblank + free));
+
+						}
+						else if (MEMORY.get(i-1).name != '0' && MEMORY.get(i+1).name == '0') {	// back blank
+							int blank = MEMORY.get(i-1).length;
+							int free = MEMORY.get(i).length;
+							MEMORY.remove(i-1);
+							MEMORY.remove(i-1);
+							MEMORY.add(i-1, new job('0', blank + free));
+							break;
+						}
+						else if (MEMORY.get(i-1).name == '0' && MEMORY.get(i+1).name != '0') {	// front blank
+							int blank = MEMORY.get(i+1).length;
+							int free = MEMORY.get(i).length;
+							MEMORY.remove(i);
+							MEMORY.remove(i);
+							MEMORY.add(i, new job('0', blank + free));
+							break;
+						}
+						else if (MEMORY.get(i-1).name != '0' && MEMORY.get(i+1).name != '0') {	// no blank
+							MEMORY.get(i).name = '0'; break;
+						}
+					}
+				}
+			}
+		}
+	}
+
 }
