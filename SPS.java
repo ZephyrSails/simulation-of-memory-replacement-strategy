@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 //import job;
 
-
 public class SPS {
 	static int spaceNum = 64;
 	static ArrayList<job> MEMORY = new ArrayList<job>();
@@ -20,6 +19,9 @@ public class SPS {
 		printJob();
 		releaseJob('c');
 		printJob();
+		String c;
+		System.out.println("    [h]\tShow this helping document.");
+		System.out.println("    [q]\tQuit this simulation.");
 	}
 	
 	public static void printJob() {
